@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FreshLink - Professional Farm-to-Table Platform</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .app-name {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .tagline {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        /* Navigation */
+        .nav {
+            background: white;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            flex-wrap: wrap;
+        }
+
+        .nav-button {
+            padding: 10px 20px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .nav-button.active {
+            background: #2E7D32;
+        }
+
+        /* Pages */
+        .page {
+            display: none;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* Map Page */
+        .map-container {
+            display: flex;
+            height: 70vh;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        #map {
+            flex: 1;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .locations-sidebar {
+            width: 350px;
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            overflow-y: auto;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        /* Calculators */
+        .calculators-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .calculator-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .calculator-title {
+            font-size: 1.4em;
+            margin-bottom: 20px;
+            color: #333;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .calculate-btn {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .results {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .result-total {
+            font-weight: bold;
+            font-size: 1.1em;
+            color: #2E7D32;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 2px solid #4CAF50;
+        }
+
+        /* Profile Creation Page */
+        .profile-form {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 600px;
+            margin: 20px auto;
+        }
+
+        .submit-button {
+            background: #4CAF50;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        /* Messages Page */
+        .messages-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+
+        .message {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: #f9f9f9;
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .message-sender {
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .message-time {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        /* Location Cards */
+        .location-card {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-left: 4px solid #4CAF50;
+            cursor: pointer;
+        }
+
+        .location-card.restaurant {
+            border-left-color: #2196F3;
+        }
+
+        .location-name {
+            font-weight: bold;
+            font-size: 1.1em;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .location-type {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 8px;
+        }
+
+        .location-distance {
+            color: #4CAF50;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-top: 5px;
+            font-size: 14px;
+        }
+
+        .button.restaurant {
+            background: #2196F3;
+        }
+
+        .button.get-directions {
+            background: #FF9800;
+        }
+
+        .button.calculate-profit {
+            background: #9C27B0;
+        }
+
+        /* Legend */
+        .legend {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .farmer-color {
+            background: #4CAF50;
+        }
+
+        .restaurant-color {
+            background: #2196F3;
+        }
+
+        .user-location {
+            position: absolute;
+            top: 200px;
+            right: 20px;
+            z-index: 1000;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .currency-selector {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .currency-selector select {
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .map-container {
+                flex-direction: column;
+                height: auto;
+            }
+            
+            .locations-sidebar {
+                width: 100%;
+                height: 300px;
+            }
+            
+            #map {
+                height: 400px;
+            }
+            
+            .nav {
+                flex-direction: column;
+            }
+            
+            .nav-button {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+            
+            .calculators-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="app-name">FreshLink</div>
+        <div class="tagline">Connecting Farms to Tables - Fresh Every Day</div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="nav">
+        <button class="nav-button active" onclick="showPage('map-page')">🗺️ Map & Locations</button>
+        <button class="nav-button" onclick="showPage('calculators-page')">💰 Business Tools</button>
+        <button class="nav-button" onclick="showPage('profile-page')">👤 Create Profile</button>
+        <button class="nav-button" onclick="showPage('messages-page')">💬 Messages</button>
+    </div>
+
+    <!-- Map Page -->
+    <div id="map-page" class="page active">
+        <h2>Find Farmers & Restaurants Near You</h2>
+        <div class="map-container">
+            <div id="map"></div>
+            <div class="locations-sidebar">
+                <h3>Nearby Locations</h3>
+                <div id="locations-list"></div>
+            </div>
+        </div>
+        
+        <div class="user-location">
+            <button onclick="getUserLocation()">📍 Use My Location</button>
+            <div id="location-status" style="margin-top: 10px; font-size: 12px; color: #666;"></div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color farmer-color"></div>
+                <span>Farmers 🚜</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color restaurant-color"></div>
+                <span>Restaurants 🍽️</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #FF5722;"></div>
+                <span>Your Location</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calculators Page -->
+    <div id="calculators-page" class="page">
+        <h2>Business Tools & Calculators</h2>
+        
+        <div class="currency-selector">
+            <label><strong>Select Currency:</strong></label>
+            <select id="currency" onchange="updateCurrency()">
+                <option value="UGX">Ugandan Shilling (UGX)</option>
+                <option value="USD">US Dollar (USD)</option>
+                <option value="EUR">Euro (EUR)</option>
+                <option value="GBP">British Pound (GBP)</option>
+                <option value="KES">Kenyan Shilling (KES)</option>
+                <option value="TZS">Tanzanian Shilling (TZS)</option>
+            </select>
+            <span id="exchange-rate" style="font-size: 12px; color: #666;"></span>
+        </div>
+        
+        <div class="calculators-grid">
+            <!-- Profit Calculator -->
+            <div class="calculator-card">
+                <h3 class="calculator-title">💰 Farmer Profit Calculator</h3>
+                <div class="form-group">
+                    <label>Product Type:</label>
+                    <select id="product-type">
+                        <option value="vegetables">Vegetables</option>
+                        <option value="fruits">Fruits</option>
+                        <option value="grains">Grains</option>
+                        <option value="dairy">Dairy Products</option>
+                        <option value="poultry">Poultry</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Quantity (kg):</label>
+                    <input type="number" id="quantity" value="100" min="1">
+                </div>
+                <div class="form-group">
+                    <label>Selling Price per kg:</label>
+                    <input type="number" id="price-per-kg" value="5000" min="0" step="100">
+                </div>
+                <div class="form-group">
+                    <label>Production Cost per kg:</label>
+                    <input type="number" id="cost-per-kg" value="2000" min="0" step="100">
+                </div>
+                <div class="form-group">
+                    <label>Transport Cost per km:</label>
+                    <input type="number" id="transport-cost-per-km" value="5000" min="0" step="100">
+                </div>
+                <div class="form-group">
+                    <label>Distance to Market (km):</label>
+                    <input type="number" id="distance-to-market" value="10" min="0" step="0.1">
+                </div>
+                <button class="calculate-btn" onclick="calculateProfit()">Calculate Profit</button>
+                
+                <div id="profit-results" class="results" style="display: none;">
+                    <h4>Profit Analysis</h4>
+                    <div class="result-item">
+                        <span>Total Revenue:</span>
+                        <span id="total-revenue">0</span>
+                    </div>
+                    <div class="result-item">
+                        <span>Total Production Cost:</span>
+                        <span id="total-production-cost">0</span>
+                    </div>
+                    <div class="result-item">
+                        <span>Total Transport Cost:</span>
+                        <span id="total-transport-cost">0</span>
+                    </div>
+                    <div class="result-item">
+                        <span>Gross Profit:</span>
+                        <span id="gross-profit">0</span>
+                    </div>
+                    <div class="result-item">
+                        <span>Profit Margin:</span>
+                        <span id="profit-margin">0%</span>
+                    </div>
+                    <div class="result-total">
+                        <span>Net Profit:</span>
+                        <span id="net-profit">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transport Cost Calculator -->
+            <div class="calculator-card">
+                <h3 class="calculator-title">🚚 Transport Cost Calculator</h3>
+                <div class="form-group">
+                    <label>Distance (km):</label>
+                    <input type="number" id="transport-distance" value="50" min="1">
+                </div>
+                <div class="form-group">
+                    <label>Vehicle Type:</label>
+                    <select id="vehicle-type">
+                        <option value="boda">Boda Boda (Motorcycle)</option>
+                        <option value="pickup">Pickup Truck</option>
+                        <option value="small_truck">Small Truck</option>
+                        <option value="large_truck">Large Truck</option>
+                        <option value="refrigerated">Refrigerated Truck</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Cost per km:</label>
+                    <input type="number" id="cost-per-km" value="5000" min="0" step="100">
+                </div>
+                <div class="form-group">
+                    <label>Weight of Goods (kg):</label>
+                    <input type="number" id="goods-weight" value="100" min="1">
+                </div>
+                <button class="calculate-btn" onclick="calculateTransportCost()">Calculate Transport Cost</button>
+                
+                <div id="transport-results" class="results" style="display: none;">
+                    <h4>Transport Cost Breakdown</h4>
+                    <div class="result-item">
+                        <span>Base Transport Cost:</span>
+                        <span id="base-transport-cost">0</span>
+                    </div>
+                    <div class="result-item">
+                        <span>Vehicle Factor:</span>
+                        <span id="vehicle-factor">1.0x</span>
+                    </div>
+                    <div class="result-item">
+                        <span>Weight Surcharge:</span>
+                        <span id="weight-surcharge">0</span>
+                    </div>
+                    <div class="result-total">
+                        <span>Total Transport Cost:</span>
+                        <span id="total-transport-cost-calc">0</span>
+                    </div>
+                    <div class="result-item">
+                        <span>Cost per kg:</span>
+                        <span id="cost-per-kg-calc">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Creation Page -->
+    <div id="profile-page" class="page">
+        <h2>Create Your Business Profile</h2>
+        <div class="profile-form">
+            <div class="form-group">
+                <label>Business Type:</label>
+                <select id="business-type" onchange="toggleProfileFields()">
+                    <option value="">Select Type</option>
+                    <option value="farmer">🚜 Farmer/Producer</option>
+                    <option value="restaurant">🍽️ Restaurant/Buyer</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Business Name:</label>
+                <input type="text" id="business-name" placeholder="e.g., Green Valley Farm">
+            </div>
+
+            <div class="form-group">
+                <label>Contact Email:</label>
+                <input type="email" id="business-email" placeholder="e.g., contact@farm.com">
+            </div>
+
+            <div class="form-group">
+                <label>Phone Number:</label>
+                <input type="tel" id="business-phone" placeholder="e.g., +256 712 345 678">
+            </div>
+
+            <!-- Farmer Specific Fields -->
+            <div id="farmer-fields" style="display: none;">
+                <div class="form-group">
+                    <label>Products You Sell:</label>
+                    <textarea id="farmer-products" placeholder="e.g., Fresh vegetables, fruits, dairy, eggs..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Price Range per kg:</label>
+                    <input type="text" id="farmer-prices" placeholder="e.g., 3000-5000 UGX">
+                </div>
+            </div>
+
+            <!-- Restaurant Specific Fields -->
+            <div id="restaurant-fields" style="display: none;">
+                <div class="form-group">
+                    <label>Cuisine Type:</label>
+                    <input type="text" id="restaurant-cuisine" placeholder="e.g., Italian, Fresh Pasta">
+                </div>
+                <div class="form-group">
+                    <label>Products You Need:</label>
+                    <textarea id="restaurant-needs" placeholder="e.g., Fresh vegetables, organic meat, dairy..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Budget Range:</label>
+                    <input type="text" id="restaurant-budget" placeholder="e.g., 500,000-1,000,000 UGX weekly">
+                </div>
+            </div>
+
+            <button class="submit-button" onclick="createProfile()">Create Profile & Appear on Map</button>
+        </div>
+    </div>
+
+    <!-- Messages Page -->
+    <div id="messages-page" class="page">
+        <h2>Your Messages</h2>
+        <div class="messages-container">
+            <div class="message">
+                <div class="message-header">
+                    <span class="message-sender">🚜 Green Valley Farm</span>
+                    <span class="message-time">2 hours ago</span>
+                </div>
+                <p>Hi! We have fresh tomatoes available this week. Would you be interested?</p>
+                <button class="button" onclick="sendMessage('Green Valley Farm')">Reply</button>
+                <button class="button calculate-profit" onclick="showPage('calculators-page')">Calculate Profit</button>
+            </div>
+
+            <div class="message">
+                <div class="message-header">
+                    <span class="message-sender">🍽️ Blue Sky Restaurant</span>
+                    <span class="message-time">1 day ago</span>
+                </div>
+                <p>We're looking for organic lettuce for our new salad menu. Can you supply 20kg weekly?</p>
+                <button class="button restaurant" onclick="sendMessage('Blue Sky Restaurant')">Reply</button>
+                <button class="button calculate-profit" onclick="showPage('calculators-page')">Calculate Transport</button>
+            </div>
+
+            <div class="message">
+                <div class="message-header">
+                    <span class="message-sender">🚜 Sunrise Organic Farm</span>
+                    <span class="message-time">3 days ago</span>
+                </div>
+                <p>Our eggs are now available at 4000 UGX per dozen. Free delivery for orders above 100,000 UGX!</p>
+                <button class="button" onclick="sendMessage('Sunrise Organic Farm')">Reply</button>
+                <button class="button calculate-profit" onclick="showPage('calculators-page')">Calculate Profit</button>
+            </div>
+        </div>
+
+        <div class="profile-form" style="margin-top: 30px;">
+            <h3>Send New Message</h3>
+            <div class="form-group">
+                <label>To:</label>
+                <select id="message-to">
+                    <option value="">Select Business</option>
+                    <option value="Green Valley Farm">🚜 Green Valley Farm</option>
+                    <option value="Blue Sky Restaurant">🍽️ Blue Sky Restaurant</option>
+                    <option value="Sunrise Organic Farm">🚜 Sunrise Organic Farm</option>
+                    <option value="Urban Bistro">🍽️ Urban Bistro</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Your Message:</label>
+                <textarea id="message-text" placeholder="Type your message here..."></textarea>
+            </div>
+            <button class="submit-button" onclick="sendNewMessage()">Send Message</button>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        // Currency configuration
+        const exchangeRates = {
+            UGX: 1,
+            USD: 0.00027,
+            EUR: 0.00025,
+            GBP: 0.00021,
+            KES: 0.043,
+            TZS: 0.63
+        };
+
+        let currentCurrency = 'UGX';
+        let currentRate = 1;
+
+        // Update currency display
+        function updateCurrency() {
+            currentCurrency = document.getElementById('currency').value;
+            currentRate = exchangeRates[currentCurrency];
+            
+            const rateDisplay = currentCurrency === 'UGX' ? '' : ` (1 UGX = ${currentRate} ${currentCurrency})`;
+            document.getElementById('exchange-rate').textContent = rateDisplay;
+            
+            // Recalculate if results are showing
+            if (document.getElementById('profit-results').style.display !== 'none') {
+                calculateProfit();
+            }
+            if (document.getElementById('transport-results').style.display !== 'none') {
+                calculateTransportCost();
+            }
+        }
+
+        // Format currency
+        function formatCurrency(amount) {
+            if (currentCurrency === 'UGX') {
+                return `${Math.round(amount).toLocaleString()} UGX`;
+            } else {
+                return `${(amount * currentRate).toFixed(2)} ${currentCurrency}`;
+            }
+        }
+
+        // Profit Calculator
+        function calculateProfit() {
+            const quantity = parseFloat(document.getElementById('quantity').value);
+            const pricePerKg = parseFloat(document.getElementById('price-per-kg').value);
+            const costPerKg = parseFloat(document.getElementById('cost-per-kg').value);
+            const transportCostPerKm = parseFloat(document.getElementById('transport-cost-per-km').value);
+            const distance = parseFloat(document.getElementById('distance-to-market').value);
+            
+            const totalRevenue = quantity * pricePerKg;
+            const totalProductionCost = quantity * costPerKg;
+            const totalTransportCost = distance * transportCostPerKm;
+            const grossProfit = totalRevenue - totalProductionCost;
+            const netProfit = grossProfit - totalTransportCost;
+            const profitMargin = totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
+            
+            document.getElementById('total-revenue').textContent = formatCurrency(totalRevenue);
+            document.getElementById('total-production-cost').textContent = formatCurrency(totalProductionCost);
+            document.getElementById('total-transport-cost').textContent = formatCurrency(totalTransportCost);
+            document.getElementById('gross-profit').textContent = formatCurrency(grossProfit);
+            document.getElementById('profit-margin').textContent = `${profitMargin.toFixed(1)}%`;
+            document.getElementById('net-profit').textContent = formatCurrency(netProfit);
+            
+            document.getElementById('profit-results').style.display = 'block';
+        }
+
+        // Transport Cost Calculator
+        function calculateTransportCost() {
+            const distance = parseFloat(document.getElementById('transport-distance').value);
+            const vehicleType = document.getElementById('vehicle-type').value;
+            const costPerKm = parseFloat(document.getElementById('cost-per-km').value);
+            const weight = parseFloat(document.getElementById('goods-weight').value);
+            
+            // Vehicle multipliers
+            const vehicleMultipliers = {
+                'boda': 0.7,
+                'pickup': 1.0,
+                'small_truck': 1.3,
+                'large_truck': 1.8,
+                'refrigerated': 2.2
+            };
+            
+            const multiplier = vehicleMultipliers[vehicleType];
+            const baseCost = distance * costPerKm;
+            const adjustedCost = baseCost * multiplier;
+            
+            // Weight surcharge (5% per 50kg over 100kg)
+            const weightSurcharge = weight > 100 ? (weight - 100) / 50 * 0.05 * adjustedCost : 0;
+            const totalCost = adjustedCost + weightSurcharge;
+            const costPerKg = totalCost / weight;
+            
+            document.getElementById('base-transport-cost').textContent = formatCurrency(baseCost);
+            document.getElementById('vehicle-factor').textContent = `${multiplier}x`;
+            document.getElementById('weight-surcharge').textContent = formatCurrency(weightSurcharge);
+            document.getElementById('total-transport-cost-calc').textContent = formatCurrency(totalCost);
+            document.getElementById('cost-per-kg-calc').textContent = formatCurrency(costPerKg);
+            
+            document.getElementById('transport-results').style.display = 'block';
+        }
+
+        // Sample data - in real app, this would come from a database
+        let farmers = [
+            {
+                id: 1,
+                name: 'Green Valley Farm',
+                lat: 0.3136,
+                lng: 32.5811,
+                type: 'farmer',
+                products: 'Fresh vegetables, fruits, dairy',
+                phone: '+256 712 345 678',
+                email: 'contact@greenvalley.com',
+                prices: '3000-5000 UGX per kg'
+            },
+            {
+                id: 2,
+                name: 'Sunrise Organic Farm',
+                lat: 0.3236,
+                lng: 32.5911,
+                type: 'farmer',
+                products: 'Organic eggs, poultry, honey',
+                phone: '+256 712 987 654',
+                email: 'info@sunriseorganic.com',
+                prices: '4000-6000 UGX per kg'
+            }
+        ];
+
+        let restaurants = [
+            {
+                id: 3,
+                name: 'Blue Sky Restaurant',
+                lat: 0.3036,
+                lng: 32.5711,
+                type: 'restaurant',
+                cuisine: 'Italian, Fresh Pasta',
+                phone: '+256 712 555 123',
+                email: 'hello@blueskyrestaurant.com',
+                needs: 'Fresh vegetables, organic meat, dairy'
+            },
+            {
+                id: 4,
+                name: 'Urban Bistro',
+                lat: 0.3336,
+                lng: 32.6011,
+                type: 'restaurant',
+                cuisine: 'Modern European',
+                phone: '+256 712 555 567',
+                email: 'info@urbanbistro.com',
+                needs: 'Fresh vegetables, fruits, premium meats'
+            }
+        ];
+
+        // Navigation
+        function showPage(pageId) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // Remove active class from all buttons
+            document.querySelectorAll('.nav-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // Show selected page and activate button
+            document.getElementById(pageId).classList.add('active');
+            event.target.classList.add('active');
+            
+            // If showing map page, refresh map
+            if (pageId === 'map-page') {
+                setTimeout(() => {
+                    map.invalidateSize();
+                    loadLocations();
+                }, 100);
+            }
+        }
+
+        // Profile form fields toggle
+        function toggleProfileFields() {
+            const businessType = document.getElementById('business-type').value;
+            document.getElementById('farmer-fields').style.display = 'none';
+            document.getElementById('restaurant-fields').style.display = 'none';
+            
+            if (businessType === 'farmer') {
+                document.getElementById('farmer-fields').style.display = 'block';
+            } else if (businessType === 'restaurant') {
+                document.getElementById('restaurant-fields').style.display = 'block';
+            }
+        }
+
+        // Create profile function
+        function createProfile() {
+            const businessType = document.getElementById('business-type').value;
+            const name = document.getElementById('business-name').value;
+            const email = document.getElementById('business-email').value;
+            const phone = document.getElementById('business-phone').value;
+            
+            if (!businessType || !name || !email) {
+                alert('Please fill in all required fields');
+                return;
+            }
+            
+            // Use actual user location or default to Kampala
+            const userLat = userLocation ? userLocation.lat : 0.3136;
+            const userLng = userLocation ? userLocation.lng : 32.5811;
+            
+            // Add slight random offset for demo purposes (in real app, this would be actual address)
+            const newLat = userLat + (Math.random() - 0.5) * 0.01;
+            const newLng = userLng + (Math.random() - 0.5) * 0.01;
+            
+            const newProfile = {
+                id: Date.now(), // Simple ID generation
+                name: name,
+                lat: newLat,
+                lng: newLng,
+                type: businessType,
+                email: email,
+                phone: phone
+            };
+            
+            if (businessType === 'farmer') {
+                newProfile.products = document.getElementById('farmer-products').value;
+                newProfile.prices = document.getElementById('farmer-prices').value;
+                farmers.push(newProfile);
+            } else {
+                newProfile.cuisine = document.getElementById('restaurant-cuisine').value;
+                newProfile.needs = document.getElementById('restaurant-needs').value;
+                newProfile.budget = document.getElementById('restaurant-budget').value;
+                restaurants.push(newProfile);
+            }
+            
+            alert('Profile created successfully! You will appear on the map.');
+            
+            // Clear form
+            document.getElementById('business-type').value = '';
+            document.getElementById('business-name').value = '';
+            document.getElementById('business-email').value = '';
+            document.getElementById('business-phone').value = '';
+            document.getElementById('farmer-products').value = '';
+            document.getElementById('farmer-prices').value = '';
+            document.getElementById('restaurant-cuisine').value = '';
+            document.getElementById('restaurant-needs').value = '';
+            document.getElementById('restaurant-budget').value = '';
+            
+            // Show map with new profile
+            showPage('map-page');
+        }
+
+        // Message functions
+        function sendMessage(businessName) {
+            document.getElementById('message-to').value = businessName;
+            showPage('messages-page');
+            document.getElementById('message-text').focus();
+        }
+
+        function sendNewMessage() {
+            const to = document.getElementById('message-to').value;
+            const text = document.getElementById('message-text').value;
+            
+            if (!to || !text) {
+                alert('Please select a recipient and write a message');
+                return;
+            }
+            
+            alert(`Message sent to ${to}!\n\nMessage: ${text}`);
+            document.getElementById('message-text').value = '';
+        }
+
+        // MAP CODE - Fixed with proper location tracking
+        const map = L.map('map').setView([0.3136, 32.5811], 12); // Default to Kampala, Uganda
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        let userLocation = null;
+        let userMarker = null;
+        let locationMarkers = [];
+        let watchId = null;
+
+        const farmerIcon = L.divIcon({
+            html: '<div style="background-color: #4CAF50; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">🚜</div>',
+            className: 'farmer-marker',
+            iconSize: [30, 30]
+        });
+
+        const restaurantIcon = L.divIcon({
+            html: '<div style="background-color: #2196F3; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">🍽️</div>',
+            className: 'restaurant-marker',
+            iconSize: [30, 30]
+        });
+
+        const userIcon = L.divIcon({
+            html: '<div style="background-color: #FF5722; width: 25px; height: 25px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 14px; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">📍</div>',
+            className: 'user-marker',
+            iconSize: [25, 25]
+        });
+
+        function calculateDistance(lat1, lng1, lat2, lng2) {
+            const R = 6371; // Earth radius in km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLng = (lng2 - lng1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+                    Math.sin(dLng/2) * Math.sin(dLng/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return (R * c).toFixed(1);
+        }
+
+        function getUserLocation() {
+            if (navigator.geolocation) {
+                document.getElementById('location-status').textContent = 'Getting your location...';
+                
+                // Stop any existing location watch
+                if (watchId) {
+                    navigator.geolocation.clearWatch(watchId);
+                }
+                
+                // Get current position and watch for changes
+                watchId = navigator.geolocation.watchPosition(
+                    (position) => {
+                        userLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+                        
+                        document.getElementById('location-status').textContent = 
+                            `Location: ${userLocation.lat.toFixed(4)}, ${userLocation.lng.toFixed(4)}`;
+                        
+                        // Center map on user location
+                        map.setView([userLocation.lat, userLocation.lng], 13);
+                        
+                        // Add/update user marker
+                        if (userMarker) {
+                            map.removeLayer(userMarker);
+                        }
+                        userMarker = L.marker([userLocation.lat, userLocation.lng], { icon: userIcon })
+                            .addTo(map)
+                            .bindPopup('Your Current Location')
+                            .openPopup();
+                        
+                        // Reload locations with updated distances
+                        loadLocations();
+                    },
+                    (error) => {
+                        let errorMsg = 'Error getting location: ';
+                        switch(error.code) {
+                            case error.PERMISSION_DENIED:
+                                errorMsg += "User denied the request for Geolocation.";
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                errorMsg += "Location information is unavailable.";
+                                break;
+                            case error.TIMEOUT:
+                                errorMsg += "The request to get user location timed out.";
+                                break;
+                            case error.UNKNOWN_ERROR:
+                                errorMsg += "An unknown error occurred.";
+                                break;
+                        }
+                        document.getElementById('location-status').textContent = errorMsg;
+                        // Load with default location (Kampala)
+                        loadLocations();
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    }
+                );
+            } else {
+                alert('Geolocation is not supported by this browser.');
+                loadLocations();
+            }
+        }
+
+        function loadLocations() {
+            const allLocations = [...farmers, ...restaurants];
+            const userLat = userLocation ? userLocation.lat : 0.3136;
+            const userLng = userLocation ? userLocation.lng : 32.5811;
+            
+            const locationsWithDistance = allLocations.map(location => {
+                return {
+                    ...location,
+                    distance: calculateDistance(userLat, userLng, location.lat, location.lng)
+                };
+            }).sort((a, b) => a.distance - b.distance);
+
+            displayLocations(locationsWithDistance);
+            addMarkersToMap(locationsWithDistance);
+        }
+
+        function displayLocations(locations) {
+            const locationsList = document.getElementById('locations-list');
+            locationsList.innerHTML = '';
+
+            if (locations.length === 0) {
+                locationsList.innerHTML = '<p>No businesses found in your area. Create a profile to get started!</p>';
+                return;
+            }
+
+            locations.forEach(location => {
+                const card = document.createElement('div');
+                card.className = `location-card ${location.type === 'restaurant' ? 'restaurant' : ''}`;
+                card.onclick = () => {
+                    map.flyTo([location.lat, location.lng], 15);
+                    locationMarkers.forEach(marker => {
+                        if (marker.locationId === location.id) {
+                            marker.openPopup();
+                        }
+                    });
+                };
+
+                const transportCost = (location.distance * 5000).toLocaleString();
+                
+                card.innerHTML = `
+                    <div class="location-name">${location.type === 'farmer' ? '🚜' : '🍽️'} ${location.name}</div>
+                    <div class="location-type">${location.type === 'farmer' ? 'Farm' : 'Restaurant'}</div>
+                    <div class="location-distance">${location.distance} km away</div>
+                    <div style="margin-bottom: 10px; font-size: 14px;">
+                        ${location.products || location.cuisine || location.needs || ''}
+                        ${location.prices ? `<br><strong>Prices:</strong> ${location.prices}` : ''}
+                    </div>
+                    <div style="font-size: 13px; color: #666; margin-bottom: 10px;">
+                        Estimated transport: ${transportCost} UGX
+                    </div>
+                    <button class="button ${location.type === 'restaurant' ? 'restaurant' : ''}" 
+                            onclick="event.stopPropagation(); viewProfile(${location.id})">
+                        View Profile
+                    </button>
+                    <button class="button get-directions" 
+                            onclick="event.stopPropagation(); getDirections(${location.id})">
+                        Get Directions
+                    </button>
+                    <button class="button" 
+                            onclick="event.stopPropagation(); sendMessage('${location.name}')">
+                        Send Message
+                    </button>
+                `;
+
+                locationsList.appendChild(card);
+            });
+        }
+
+        function addMarkersToMap(locations) {
+            locationMarkers.forEach(marker => map.removeLayer(marker));
+            locationMarkers = [];
+
+            locations.forEach(location => {
+                const icon = location.type === 'farmer' ? farmerIcon : restaurantIcon;
+                const marker = L.marker([location.lat, location.lng], { icon: icon })
+                    .addTo(map)
+                    .bindPopup(`
+                        <div style="text-align: center; min-width: 200px;">
+                            <strong>${location.type === 'farmer' ? '🚜' : '🍽️'} ${location.name}</strong><br>
+                            <small>${location.type === 'farmer' ? 'Farm' : 'Restaurant'}</small><br>
+                            <small>${location.distance} km away</small><br>
+                            <small>${location.products || location.cuisine || location.needs || ''}</small><br>
+                            ${location.prices ? `<small><strong>Prices:</strong> ${location.prices}</small><br>` : ''}
+                            <small>Transport: ${(location.distance * 5000).toLocaleString()} UGX</small><br>
+                            <button onclick="viewProfile(${location.id})" style="margin: 2px; padding: 5px 10px; background: #4CAF50; color: white; border: none; border-radius: 3px; cursor: pointer;">Profile</button>
+                            <button onclick="getDirections(${location.id})" style="margin: 2px; padding: 5px 10px; background: #FF9800; color: white; border: none; border-radius: 3px; cursor: pointer;">Directions</button>
+                            <button onclick="sendMessage('${location.name}')" style="margin: 2px; padding: 5px 10px; background: #2196F3; color: white; border: none; border-radius: 3px; cursor: pointer;">Message</button>
+                        </div>
+                    `);
+
+                marker.locationId = location.id;
+                locationMarkers.push(marker);
+            });
+        }
+
+        function viewProfile(locationId) {
+            const allLocations = [...farmers, ...restaurants];
+            const location = allLocations.find(loc => loc.id === locationId);
+            if (location) {
+                const transportCost = (location.distance * 5000).toLocaleString();
+                alert(`🏪 ${location.name}\n\nType: ${location.type === 'farmer' ? '🚜 Farm' : '🍽️ Restaurant'}\n\n${location.products || location.cuisine || location.needs || 'Fresh local products'}\n\n${location.prices ? `Prices: ${location.prices}\n\n` : ''}📍 ${location.distance} km away\n🚚 Estimated Transport: ${transportCost} UGX\n\n📞 ${location.phone}\n📧 ${location.email}`);
+            }
+        }
+
+        function getDirections(locationId) {
+            const allLocations = [...farmers, ...restaurants];
+            const location = allLocations.find(loc => loc.id === locationId);
+            if (location) {
+                const url = `https://www.google.com/maps/dir/?api=1&destination=${location.lat},${location.lng}`;
+                window.open(url, '_blank');
+            }
+        }
+
+        // Initialize the app
+        window.onload = function() {
+            getUserLocation();
+            updateCurrency();
+        };
+    </script>
+</body>
+</html>
